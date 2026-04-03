@@ -1,30 +1,36 @@
 import fortnitepy
 import asyncio
 import os
-import sys
 
-# 1. Get the secret code from Mangoi Environment Variables
-auth_code = os.getenv("AUTH_CODE")
+# 1. Configuration (Epic Games Launcher Credentials)
+CID = "34a02cf8f4414e29b15921876da36f9a"
+SECRET = "daafbA73L9z97CE0u85973795CD697CD"
 
 async def run_bot():
-    print("--- 🚀 FORTNITE BOT STARTING 🚀 ---")
+    # 2. Check for the AUTH_CODE in Mangoi Environment Variables
+    auth_code = os.getenv("AUTH_CODE")
 
-    # 2. Decide how to log in
-    if not auth_code or auth_code == "":
-        print("⚠️ WARNING: No AUTH_CODE found in Mangoi Settings.")
-        print("👉 LOOK BELOW FOR THE LOGIN LINK! 👇")
-        # This forces the library to print the login link to the logs
-        auth = fortnitepy.AdvancedAuth()
-    else:
-        print(f"✅ AUTH_CODE detected! Attempting to log in...")
-        auth = fortnitepy.AdvancedAuth(
+    # 3. If no code is found, show the link and STOP (to prevent crashing)
+    if not auth_code:
+        print("\n" + "!"*50)
+        print("⚠️ ACTION REQUIRED: GET YOUR LOGIN CODE ⚠️")
+        print(f"https://www.epicgames.com/id/api/redirect?clientId={CID}&responseType=code")
+        print("!"*50 + "\n")
+        print("STEPS:")
+        print("1. Click the link above and log in to your Bot Account.")
+        print("2. Copy the 32-character 'authorizationCode' from the white page.")
+        print("3. Go to Mangoi Settings > Environment Variables.")
+        print("4. Add Key: AUTH_CODE | Value: (Paste your 32-digit code).")
+        print("5. RESTART the bot on Mangoi.")
+        return 
+
+    # 4. If code IS found, log in normally
+    print("🚀 AUTH_CODE detected! Attempting to log in to Fortnite...")
+    
+    client = fortnitepy.Client(
+        auth=fortnitepy.AdvancedAuth(
             authorization_code=auth_code
         )
-
-    # 3. Setup the Client
-    client = fortnitepy.Client(
-        auth=auth,
-        status="Mangoi 24/7 Bot"
     )
 
     @client.event
@@ -32,27 +38,23 @@ async def run_bot():
         print("---------------------------------------")
         print(f"🔥 SUCCESS! Bot is online as: {client.user.display_name}")
         print("---------------------------------------")
-        # Sets skin to Renegade Raider by default
+        # Sets skin to Renegade Raider (Default)
         await client.user.set_outfit('CID_028_Athena_Commando_F_Rare')
 
     @client.event
     async def event_friend_request(request):
         await request.accept()
-        print(f"🤝 Accepted friend: {request.display_name}")
+        print(f"🤝 Accepted friend request from: {request.display_name}")
 
-    # 4. Start the bot and catch errors
+    # 5. Start the engine
     try:
         await client.start()
     except Exception as e:
-        print(f"❌ ERROR STARTING BOT: {e}")
-        print("💡 TIP: If it says 'NoneType', you need a NEW auth code from the link.")
+        print(f"❌ LOGIN ERROR: {e}")
+        print("💡 Your AUTH_CODE probably expired. Delete it from Mangoi and get a new one!")
 
-# 5. Run the background loop
 if __name__ == "__main__":
     try:
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(run_bot())
+        asyncio.run(run_bot())
     except KeyboardInterrupt:
         pass
-    except Exception as e:
-        print(f"FATAL ERROR: {e}")
